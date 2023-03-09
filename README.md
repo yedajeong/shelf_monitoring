@@ -8,7 +8,9 @@
 ![ex2](https://user-images.githubusercontent.com/49023751/223939938-6a81c2ee-b931-4ed9-9429-2cb92fc28c12.png)
 ![ex3](https://user-images.githubusercontent.com/49023751/223939949-618b77f4-9613-43d2-9402-dbd6e9751908.png)
 
+<br/>
 
+---
 ### 1. 결품감지 성능 개선
 - 학습용 데이터셋 라벨링 (pascal voc)
 - object detection 모델 학습 (retinanet 기반)
@@ -33,7 +35,9 @@
 <img width="295" alt="1-before(5)" src="https://user-images.githubusercontent.com/49023751/223941002-21a599f7-a168-4e4f-8480-ca995c94229f.png">
 <img width="295" alt="1-after(5)" src="https://user-images.githubusercontent.com/49023751/223941007-fccb73b5-8c27-4450-9afc-576e880db877.png">
 
+<br/>
 
+---
 ### 2. 결품감지 기능 추가
 - 다른 카테고리의 상품이 위치 시 이를 탐지, 결품이라 판단
 - pre-trained foundation 모델인 vgg16을 전이학습
