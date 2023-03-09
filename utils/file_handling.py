@@ -1,6 +1,13 @@
 import os
 from distutils.dir_util import copy_tree
+import cv2
+import matplotlib.pyplot as plt
 
+
+# 이미지 RGB, 픽셀 좌표 확인 (마우스오버)
+img = cv2.cvtColor(cv2.imread('/Users/dajeong/Desktop/Yennie/image_clustering/blend_133.jpg'), cv2.COLOR_BGR2RGB)
+plt.imshow(img)
+plt.show()
 
 # clustered -> 하나로 합치기
 SRC_DIR = "/Users/dajeong/Desktop/Yennie/image_clustering/data_cluster"
