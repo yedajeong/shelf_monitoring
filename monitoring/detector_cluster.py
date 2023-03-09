@@ -10,22 +10,24 @@ from keras.applications.vgg16 import VGG16
 from keras.models import Model, load_model
 
 # clustering, dimension reduction
-# from sklearn.cluster import KMeans  # cv2.kmeans로 변경
+# from sklearn.cluster import KMeans
 # from sklearn.decomposition import PCA
 
 import os
+from pathlib import Path
 import numpy as np
+import csv
 
 
 # IMG_SIZE = 224
 IMG_SIZE = 70  # input image(frame)에서 box친 object의 resized image size (70*70*3)
-k = 3  # 뉴월드_best k 찾도록 (수정)
+# k = 3  # best k 설정
 script_path = os.path.dirname(os.path.realpath(__file__))  # 현재 열려있는 파일의 절대경로 - 파일 떼고 디렉토리 명만 얻어서 변수에 저장
 
 class ClusterDetector(object):
 
     def __init__(self):
-        self.bbox_model = models.load_model(os.path.join(script_path, 'resnet101_pascal_0120.h5'), backbone_name='resnet101')
+        self.bbox_model = models.load_model(os.path.join(script_path, 'resnet101_pascal_0216.h5'), backbone_name='resnet101')
         self.bbox_model = models.convert_model(self.bbox_model)
 
         self.feat_model = load_model(os.path.join(script_path, 'VGG16_fine_tuning_4.h5'))
@@ -34,31 +36,23 @@ class ClusterDetector(object):
         self.objects = {}  # key: object numbering  value: bbox coord([xmin, ymin, xmax, ymax])
         self.features = {}  # key: object numbering  value: extracted feature vector (from fine-tuning vgg16)
         self.groups = {}  # key: cluster numbering  value: list of object numbering
-        self.unique_labels = [i for i in range(k)]
+        # self.unique_labels = [i for i in range(k)]
+        # self.colors = [(int(255/k)*i, int(255/k)*i, int(255/k)*i) for i in range(1, k+1)]  # rgb color (cluster 개수만큼 지정)
 
-        self.n_components = 0
+        # self.n_components = 0
 
 
     def detect_image(self, input_img, store_id=0, port=0, category_id=0, is_test=False):
-        '''
-            return: 상품 군집 내 다른 상품 디텍팅 됐을 경우 해당 obj의 bbox 좌표들의 list
-            
-            +) input image에 박스 그려서 지정된 path에 저장
-            
-            1. input image 내의 bbox 읽어서 self.objects에 딕셔너리로 저장함 (coord 4개값)
-            
-            2. 한 cluster 내에 포함된 obj들의 bbox coord (xmin, ymin, xmax, ymax)를 각각 lu(min), rd(max)에 저장함
-            lu중 min_x, rd중 max_x에 해당하는 obj 사이를 input image 내의 이 cluster의 영역으로 지정,
-            이 때 예외 사항의 경우 여러 개의 clstr로 분할될 수 있음
-
-            3. 다른 cluster들의 obj를 순회하면서 현재 지정된 cluster의 영역 내에 bbox가 위치했을 경우
-            = obj 면적의 80% 이상이 현재 지정된 cluster 영역과 겹칠 경우라고 판단
-        '''
         
+        p = Path('static/image/process/{}/{}/{}'.format(store_id, port, category_id))
+        if False == p.exists():
+            p.mkdir(parents=True)
+
         input_img = cv2.cvtColor(input_img.copy(), cv2.COLOR_BGR2RGB)
         
-        if is_test:  # bbox labeled img로 테스트 (학습시킨 self.bbox_model이 bbox를 잘 잡는다고 가정했을 때..)
-            # image, xml filename
+        
+        if is_test:  # bbox labeled img로 테스트 (학습시킨 self.bbox_model이 bbox를 잘 잡는다고 가정)
+            # image, xml filename list
             images = []
             xmls = []
 
@@ -117,107 +111,56 @@ class ClusterDetector(object):
                 self.objects.setdefault(idx, box)
                 
             # 결과 저장 위치 (is_test==False)
-            path = f'static/image/process/{store_id}/{port}/{category_id}/diff_obj'
-            os.makedirs(path, exist_ok=True)
+            # path = f'static/image/process/{store_id}/{port}/{category_id}/diff_obj'
+            # os.makedirs(path, exist_ok=True)
         
-        
-        self.n_components = min(len(self.objects), 100)
 
-        # clustering결과 -> self.groups에 저장
-        self.clustering(input_img, is_test=is_test)
-
-        
         return_boxes = []  # 함수 return
         return_img = input_img.copy()  # 다른 상품 디텍팅된 bbox 누적시켜서 저장할 이미지
+
+        sort_list = sorted(self.objects.items(), key=lambda x: x[1][0])
+        objects = {}
+        for key, value in sort_list:
+            objects.setdefault(key, value)
+        self.objects = objects
+
+        self.extract_features(input_img)
         
-        for cluster in self.groups.keys():
-            objs = self.groups[cluster]
+        ref_feat_p = os.path.join(p, 'ref_feature.npy')
+        ref_xmin_p = os.path.join(p, 'ref_xmin.npy')
+        if os.path.isfile(ref_feat_p) and os.path.isfile(ref_xmin_p):
+            ref_feat = np.load(ref_feat_p)
+            ref_xmin = np.load(ref_xmin_p)
+        else:
+            ref_feat = np.array(list(self.features.values()))
+            ref_xmin = np.array([xmin for xmin, _, _, _ in list(self.objects.values())])
+            np.save(ref_feat_p, ref_feat)
+            np.save(ref_xmin_p, ref_xmin)
+            return []  # return empty results
 
-            # 물체 1개 -> pass (cluster로 묶지 않음)
-            if len(objs) < 2:
-                continue
-            
-            lu = []
-            rd = []
-            for obj in objs:
-                xmin, ymin, xmax, ymax = self.objects[obj]
-                lu.append((xmin, ymin))
-                rd.append((xmax, ymax))
+        for i, compare in enumerate(feat):
+            similarity = self.cos_sim(feat[i], self.features[i])
+            close = abs(ref_xmin[i] - self.objects[i][0])
 
-            # y값 기준 오름차순 정렬
-            lu.sort(key = lambda x:x[1]) 
-            rd.sort(key = lambda x:x[1])
-            # cluster 영역의 lu, rd 좌표 -> list로 저장
-            coord = [lu[0][0], lu[0][1], rd[-1][0], rd[-1][1]]
-            clstr_area = [coord]
+            if similarity < 0.7 and close < 50:
+                x1, y1, x2, y2 = self.objects[i]
 
-            '''
-            # 리스트의 obj 순회하면서 range 이상으로 x좌표값이 확 튈 때 해당 obj 기준으로 분할 (수정)
-            area = self.calc_area(clstr_area[cluster][0])
-            obj_area = self.calc_area(self.objects[objs[0]])
-            if area > obj_area * len(objs) * 1.5:  # 2? 값 조절하면서 확인하기 -> obj_area * len 말고 obj_area 각각 구한거 더해서 계산하기 (수정)
-                clstr_area = []
-                split = True
-                i = 0
-                while(split and i < len(lu)-1):
-                    if (lu[i][2]-lu[i][0]) * 2 < lu[i+1][0]:
-                        left_lu = lu[:i+1]
-                        right_lu = lu[i+1:]
-                        left_rd = rd[:i+1]
-                        right_rd = rd[i+1:]
-                        
-                        # 분할 왼/오 len() 계산해서 len<2이면 pass (묶지 않음) len>1이면 더 쪼갤 수 있는지 확인
-                        if len(left_lu) > 1:
-                            clstr_area.append([left_lu[0][0], left_lu[0][1], left_rd[-1][0], left_rd[-1][1]])
-                        else:
-                            pass
-                            
-                        if len(right_lu) > 1:
-                            split = True  # 오른쪽 한 번 더 스캔.. 남은 거 없을 때까지
-                            lu = right_lu
-                            rd = right_rd
-                            i = 0
-                        else:
-                            split = False
-                    else:
-                        i += 1
-            '''
+                return_boxes.append([x1, y1, x2, y2])
+                return_img = cv2.rectangle(return_img, (x1, y1), (x2, y2), (0, 255, 0), 1, lineType=cv2.LINE_AA)
 
-            for other in self.groups.keys():
-                if other == cluster:
-                    continue
-                else:
-                    objs_other = self.groups[other]
-                    for obj_other in objs_other:
-                        # cluster 안에 area 여러 개일 때도 각각 비교연산 (수정)
-                        # inter = np.array([self.intersection(area, self.objects[obj_other]) for area in clstr_area])
-                        # inter = np.where(inter > self.calc_area(self.objects[obj_other])*0.8)  # obj_other의 80% 이상이 다른 cluster 영역과 겹치면 다른 상품으로 디텍팅
-                        # if len(inter) > 0:
-                        #     return_img = cv2.rectangle(return_img, (x1, y1), (x2, y2), (0, 255, 0), 1, lineType=cv2.LINE_AA)
-                        #     return_boxes.append([x1, y1, x2, y2])
-
-                        inter = self.intersection(clstr_area[0], self.objects[obj_other])
-                        x1, y1, x2, y2 = self.objects[obj_other] 
-                        if inter > self.calc_area(self.objects[obj_other])*0.8:  # obj의 80% 이상이 다른 cluster 영역과 겹치면 다른 상품으로 디텍팅
-                            return_img = cv2.rectangle(return_img, (x1, y1), (x2, y2), (0, 255, 0), 1, lineType=cv2.LINE_AA)
-                            return_boxes.append([x1, y1, x2, y2])
-
-                        
-                            black_img = np.zeros_like(input_img.copy())
-                            clst_img = cv2.rectangle(black_img, (clstr_area[0][0], clstr_area[0][1]), (clstr_area[0][2], clstr_area[0][3 ]), (0, 0, 255), -1, cv2.LINE_AA)
-                            obj_img = cv2.rectangle(black_img, (x1, y1), (x2, y2), (255, 0, 0), -1, cv2.LINE_AA)
-
-                            blend = cv2.addWeighted(clst_img, 0.5, obj_img, 0.5, 0)
-                            filename = f'blend_c{cluster}_with_c{other}.jpg'
-                            cv2.imwrite(os.path.join(path, filename), blend)
 
         if is_test:
-            cv2.imwrite(os.path.join(path, 'test_result.jpg'), cv2.cvtColor(return_img, cv2.COLOR_BGR2RGB))
+            cv2.imwrite(os.path.join(p, 'test_result.jpg'), cv2.cvtColor(return_img, cv2.COLOR_BGR2RGB))
         else:
-            cv2.imwrite(os.path.join(path, 'result.jpg'), cv2.cvtColor(return_img, cv2.COLOR_BGR2RGB))
+            cv2.imwrite(os.path.join(p, 'result.jpg'), cv2.cvtColor(return_img, cv2.COLOR_BGR2RGB))
+        
         return return_boxes
 
-        
+
+    def cos_sim(self, feat1, feat2):
+        feat2 = np.transpose(feat2)
+        return np.dot(feat1, feat2)/(np.linalg.norm(feat1)*np.linalg.norm(feat2))
+
 
     def intersection(self, box1, box2):
         # box = (xmin, ymin, xmax, ymax)
@@ -378,6 +321,8 @@ class ClusterDetector(object):
 
             self.groups[cluster].append(obj)
 
+        
+
 
         # view_cluster (for test)
         if is_test:
@@ -399,20 +344,3 @@ if __name__ == '__main__':
     
     print(len(result) > 0)
 
-
-
-# # best-k 찾기
-# sse = []
-# list_k = list(range(3, 50))
-
-# for k in list_k:
-#     km = KMeans(n_clusters=k, random_state=22, n_jobs=-1)
-#     km.fit(x)
-
-#     sse.append(km.inertia_)
-
-# # Plot sse against k
-# plt.figure(figsize=(6, 6))
-# plt.plot(list_k, sse)
-# plt.xlabel(r'Number of clusters *k*')
-# plt.ylabel('Sum of squared distance')
