@@ -14,28 +14,44 @@
 ### 1. 결품감지 성능 개선
 - 학습용 데이터셋 라벨링 (pascal voc)
 - object detection 모델 학습 (retinanet 기반)
+
+<br/>
+
 - 학습 데이터 추가 전 / 후
 <img width="452" alt="1-before" src="https://user-images.githubusercontent.com/49023751/223939988-f4317b57-3191-4067-afbc-83e7fe2a5be0.png">
 
 <img width="452" alt="1-after" src="https://user-images.githubusercontent.com/49023751/223940001-8b2104ed-1c5f-4d9e-9a0b-f40b1d94a807.png">
 
+<br/><br/>
 
-<br/>
+- 성능 개선 - 모델 파라미터 값 튜닝, 로직 수정 전(오탐) / 후
 
-- 모델 파라미터 값 튜닝, 로직 수정
-- 성능 개선 전 / 후
-<figure class="half">
-  <img width="236" alt="1-before(3)" src="https://user-images.githubusercontent.com/49023751/223940803-65ea2f3f-bcf8-4812-aa71-4f1197992cf8.png">
-  <img width="236" alt="1-after(3)" src="https://user-images.githubusercontent.com/49023751/223940866-b1351f55-37c5-43e2-bc35-db7c8f6c4293.png">
-<figure>
+<a href="https://github.com/anuraghazra/github-readme-stats">
+  <img align="center" width="236" alt="1-before(3)" src="https://user-images.githubusercontent.com/49023751/223940803-65ea2f3f-bcf8-4812-aa71-4f1197992cf8.png" />
+</a>
+<a href="https://github.com/anuraghazra/convoychat">
+  <img align="center" width="236" alt="1-after(3)" src="https://user-images.githubusercontent.com/49023751/223940866-b1351f55-37c5-43e2-bc35-db7c8f6c4293.png" />
+</a>
 
-<img width="262" alt="1-before(4)" src="https://user-images.githubusercontent.com/49023751/223940920-24df8d61-98a7-4156-b4e9-4c2e9a320cbc.png">
-<img width="262" alt="1-after(4)" src="https://user-images.githubusercontent.com/49023751/223940978-ddf49e6b-ddab-43d8-8628-fd640db8671d.png">
+<br/><br/>
 
-<img width="295" alt="1-before(5)" src="https://user-images.githubusercontent.com/49023751/223941002-21a599f7-a168-4e4f-8480-ca995c94229f.png">
-<img width="295" alt="1-after(5)" src="https://user-images.githubusercontent.com/49023751/223941007-fccb73b5-8c27-4450-9afc-576e880db877.png">
+<a href="https://github.com/anuraghazra/github-readme-stats">
+  <img align="center" width="262" alt="1-before(4)" src="https://user-images.githubusercontent.com/49023751/223940920-24df8d61-98a7-4156-b4e9-4c2e9a320cbc.png" />
+</a>
+<a href="https://github.com/anuraghazra/convoychat">
+  <img align="center" width="262" alt="1-after(4)" src="https://user-images.githubusercontent.com/49023751/223940978-ddf49e6b-ddab-43d8-8628-fd640db8671d.png" />
+</a>
 
-<br/>
+<br/><br/>
+
+<a href="https://github.com/anuraghazra/github-readme-stats">
+  <img align="center" width="295" alt="1-before(5)" src="https://user-images.githubusercontent.com/49023751/223941002-21a599f7-a168-4e4f-8480-ca995c94229f.png" />
+</a>
+<a href="https://github.com/anuraghazra/convoychat">
+  <img align="center" width="295" alt="1-after(5)" src="https://user-images.githubusercontent.com/49023751/223941007-fccb73b5-8c27-4450-9afc-576e880db877.png" />
+</a>
+  
+<br/><br/>
 
 ---
 ### 2. 결품감지 기능 추가
@@ -43,10 +59,13 @@
 - pre-trained foundation 모델인 vgg16을 전이학습
 - 상위 6개의 layer(block4 conv layer 3개 + block5 conv layer 3개)만 unfreeze시켜 도메인 데이터를 지도학습시킨 fine tuning 모델
 - 이를 feature extractor로써 사용
-- 추출된 feature간의 cosine similarity를 기반으로 일정 threshold 이하의 유사도인 경우 다른 상품으로 판단, 결품이라고 파악함 <br/>
-
+- 추출된 feature간의 cosine similarity를 기반으로 일정 threshold 이하의 유사도인 경우 다른 상품으로 판단, 결품이라고 파악함
 - vgg16 fine tuning 학습용 데이터셋: 14종류 상품 6면을 촬영한 이미지 데이터셋
+
+<br/>
+
 - 유사도 상위 20개의 상품 추출 결과 예시
+
 <img width="300" alt="2-clstr4" src="https://user-images.githubusercontent.com/49023751/223941081-444f61c7-6a14-4268-b55a-2f8c812ab41b.jpg">
 
 <img width="300" alt="2-clstr3" src="https://user-images.githubusercontent.com/49023751/223941084-bd5ac981-07b1-4695-b7eb-9441a06e6849.jpg">
