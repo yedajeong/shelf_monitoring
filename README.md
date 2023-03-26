@@ -78,4 +78,9 @@
 <br/>
 
 - 이전 프레임 & 현재 프레임 다른 상품이 놓인 경우 bbox로 표시 <br/>
-![2-ex](https://user-images.githubusercontent.com/49023751/223941077-ce8a9928-cf95-48bf-a7e2-dc36bc37547e.jpg)
+<a href="https://github.com/anuraghazra/github-readme-stats">
+  <img align="center" width="300" alt="result_before" src="https://user-images.githubusercontent.com/49023751/227785292-9b8c37ef-a27b-4870-a350-a9181a6939b6.png" />
+</a>
+<a href="https://github.com/anuraghazra/convoychat">
+  <img align="center" width="300" alt="result_after" src="https://user-images.githubusercontent.com/49023751/227785302-cafe638b-926a-4046-8938-9514a50c3608.png" />
+</a>
