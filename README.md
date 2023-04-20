@@ -1,6 +1,18 @@
 # shelf_monitoring
-: __무인매장 재고 관리를 위한 AI 결품감지 시스템__ <br/> <br/>
+🛒 __무인매장 재고 관리를 위한 AI 결품감지 시스템__ <br/> <br/>
 
+![Python](https://img.shields.io/badge/Python-3776AB.svg?&style=for-the-badge&logo=Python&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED.svg?&style=for-the-badge&logo=Docker&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00.svg?&style=for-the-badge&logo=TensorFlow&logoColor=white)
+![Keras](https://img.shields.io/badge/Keras-D00000.svg?&style=for-the-badge&logo=Keras&logoColor=white)
+![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8.svg?&style=for-the-badge&logo=OpenCV&logoColor=white)
+![NumPy](https://img.shields.io/badge/NumPy-013243.svg?&style=for-the-badge&logo=NumPy&logoColor=white)
+![visualstudiocode](https://img.shields.io/badge/visualstudiocode-007ACC.svg?&style=for-the-badge&logo=visualstudiocode&logoColor=white)
+![MQTT](https://img.shields.io/badge/MQTT-660066.svg?&style=for-the-badge&logo=MQTT&logoColor=white)
+
+---
+
+### Summary
 진열대 내의 상품이 판매되어 결품이 발생했을 때 이를 감지하고 실시간 결품 보충작업 지시를 내릴 수 있습니다. <br/>
 
 - 결품감지 결과 예시 <br/>
