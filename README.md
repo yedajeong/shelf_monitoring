@@ -29,7 +29,7 @@
 
 <br/>
 
-- 학습 데이터 추가 전 / 후
+- 객체 탐지 학습 데이터 추가 전 / 후
 <img width="452" alt="1-before" src="https://user-images.githubusercontent.com/49023751/223939988-f4317b57-3191-4067-afbc-83e7fe2a5be0.png">
 
 <img width="452" alt="1-after" src="https://user-images.githubusercontent.com/49023751/223940001-8b2104ed-1c5f-4d9e-9a0b-f40b1d94a807.png">
